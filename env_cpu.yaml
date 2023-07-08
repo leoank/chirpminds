@@ -1,0 +1,34 @@
+name: chirpminds
+channels:
+  - pytorch
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pytorch>=2.0
+  - torchvision
+  - lightning
+  - numpy
+  - scikit-image
+  - jupyterlab
+  - click
+  - black
+  - tqdm
+  - joblib
+  - pyarrow
+  - pandas
+  - pydantic
+  - pygwalker
+  - pip
+  - pip:
+    - ruff
+    - polars
+    - taichi
+    - boto3
+    - dvc
+    - dvc-gdrive
+    - backoff
+    - playwright
+    - weave
+    - -e .
+    - -e ./lite
