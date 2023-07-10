@@ -1,6 +1,7 @@
 """Utils."""
 
 from collections.abc import Callable, Iterable
+from pathlib import Path
 from typing import Any
 
 from joblib import Parallel, cpu_count, delayed
@@ -76,3 +77,8 @@ def parallel(
         delayed(func)(chunk, idx, *args)
         for idx, chunk in enumerate([iterable[s] for s in slices])
     )
+
+
+def get_default_data_folder() -> Path:
+    """Get path to default data dir."""
+    return Path(__file__).parents[2].joinpath("data")
