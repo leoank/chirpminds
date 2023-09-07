@@ -78,8 +78,8 @@ image_embedding = predictor.get_image_embedding().cpu().numpy()
 image_embedding
 
 # %%
-input_point = np.array([[375, 700]])
-input_label = np.array([1])
+input_point = np.array([[375, 700], [670, 740]])
+input_label = np.array([1, 0])
 mask, a, b = predictor.predict(input_point, input_label)
 
 # %%

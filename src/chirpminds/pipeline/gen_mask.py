@@ -1,80 +1,26 @@
-"""Predict with GroundingDINO and SAM."""
-# %%
-import groundingdino.datasets.transforms as T
-import matplotlib.pyplot as plt
+"""Generate mask."""
+
+import groundingdino.datasets.transforms as gdino_transforms
 import numpy as np
 import torch
-from chirpminds.data.io import yield_frames
-from chirpminds.utils import get_default_data_folder
 from groundingdino.models import build_model
 from groundingdino.util.slconfig import SLConfig
 from groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
 from groundingdino.util.vl_utils import create_positive_map_from_span
+from PIL import Image
 
 # from PIL import Image, ImageDraw, ImageFont
 from segment_anything import SamPredictor, sam_model_registry
 
-
-# %%
-def show_mask(mask, ax, random_color=False):  # noqa
-    if random_color:
-        color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
-    else:
-        color = np.array([30 / 255, 144 / 255, 255 / 255, 0.6])
-    h, w = mask.shape[-2:]
-    mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
-    ax.imshow(mask_image)
+from chirpminds.utils import get_default_data_folder
 
 
-def show_points(coords, labels, ax, marker_size=375):  # noqa
-    pos_points = coords[labels == 1]
-    neg_points = coords[labels == 0]
-    ax.scatter(
-        pos_points[:, 0],
-        pos_points[:, 1],
-        color="green",
-        marker="*",
-        s=marker_size,
-        edgecolor="white",
-        linewidth=1.25,
-    )
-    ax.scatter(
-        neg_points[:, 0],
-        neg_points[:, 1],
-        color="red",
-        marker="*",
-        s=marker_size,
-        edgecolor="white",
-        linewidth=1.25,
-    )
-
-
-def show_box(box, ax):  # noqa
-    x0, y0 = box[0], box[1]
-    w, h = box[2] - box[0], box[3] - box[1]
-    ax.add_patch(
-        plt.Rectangle((x0, y0), w, h, edgecolor="green", facecolor=(0, 0, 0, 0), lw=2)
-    )
-
-
-# %%
-video_file = get_default_data_folder().joinpath(
-    "raw/pilot/feeder_videos/20230114_Feeder02A/MVI_0013.MP4"
-)
-for frame in yield_frames(video_file):
-    frame_image = frame.to_image()
-    break
-# %%
-frame_image
-
-
-# %%
 def load_image(image_pil):
-    transform = T.Compose(
+    transform = gdino_transforms.Compose(
         [
-            T.RandomResize([800], max_size=1333),
-            T.ToTensor(),
-            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            gdino_transforms.RandomResize([800], max_size=1333),
+            gdino_transforms.ToTensor(),
+            gdino_transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ]
     )
     image, _ = transform(image_pil, None)  # 3, h, w
@@ -174,81 +120,44 @@ def get_grounding_output(
     return boxes_filt, pred_phrases
 
 
-# %%
 dino_config = get_default_data_folder().parent.joinpath("notes/dino_config.py")
-dino_config.is_file()
-# %%
-image_pil, image = load_image(frame_image)
-image
-# %%
-frame_image
-# %%
 model_check_path = get_default_data_folder().joinpath(
     "model/groundingdino/groundingdino_swint_ogc.pth"
 )
-model_check_path.is_file()
-model = load_model(dino_config, model_check_path, cpu_only=False)
-# %%
-boxes_filt, pred_phrases = get_grounding_output(
-    model, image, "Ring", 0.3, 0.28, False, token_spans=None
-)
-print(boxes_filt)
-pred_phrases
-# %%
+gdino = load_model(dino_config, model_check_path, cpu_only=False)
 sam = sam_model_registry["vit_h"](
     checkpoint=get_default_data_folder().joinpath("model/sam/sam_vit_h_4b8939.pth")
 )
 sam.to(device="cuda")
-predictor = SamPredictor(sam)
 
-# %%
-frame_image_array = np.array(frame_image)
-plt.imshow(frame_image_array)
 
-# %%
-predictor.set_image(np.array(frame_image))
-
-# %%
-size = image_pil.size
-H, W = size[1], size[0]
-for i in range(boxes_filt.size(0)):
-    boxes_filt[i] = boxes_filt[i] * torch.Tensor([W, H, W, H])
-    boxes_filt[i][:2] -= boxes_filt[i][2:] / 2
-    boxes_filt[i][2:] += boxes_filt[i][:2]
-
-# boxes_filt = boxes_filt.cpu()
-# use NMS to handle overlapped boxes
-# print(f"Before NMS: {boxes_filt.shape[0]} boxes")
-# nms_idx = (
-#     torchvision.ops.nms(boxes_filt, scores, iou_threshold).numpy().tolist()
-# )
-# boxes_filt = boxes_filt[nms_idx]
-# pred_phrases = [pred_phrases[idx] for idx in nms_idx]
-# print(f"After NMS: {boxes_filt.shape[0]} boxes")
-
-transformed_boxes = predictor.transform.apply_boxes_torch(
-    boxes_filt, frame_image.size
-).to(predictor.device)
-
-# %%
-frame_image.size
-# %%
-masks, scores, logits = predictor.predict_torch(
-    None, None, boxes=transformed_boxes, multimask_output=False
-)
-# %%
-plt.figure(figsize=(20, 20))
-plt.imshow(frame_image_array)
-for mask in masks:
-    show_mask(mask.cpu().numpy(), plt.gca(), random_color=True)
-for box in boxes_filt:
-    show_box(box.cpu().numpy(), plt.gca())
-plt.axis("off")
-plt.show()
-
-# %%
-masks.shape
-# %%
-cpu_masks = masks.cpu().numpy()
-plt.imshow(cpu_masks[0][0])
-# %%
+def gen_mask(frame_image: Image) -> tuple[np.ndarray, np.ndarray]:
+    """Generate mask for a frame image."""
+    image_pil, image = load_image(frame_image)
+    boxes_filt, pred_phrases = get_grounding_output(
+        gdino,
+        image,
+        "bird",
+        0.3,
+        0.28,
+        False,
+        token_spans=None,
+    )
+    predictor = SamPredictor(sam)
+    predictor.set_image(np.array(frame_image))
+    size = image_pil.size
+    H, W = size[1], size[0]
+    for i in range(boxes_filt.size(0)):
+        boxes_filt[i] = boxes_filt[i] * torch.Tensor([W, H, W, H])
+        boxes_filt[i][:2] -= boxes_filt[i][2:] / 2
+        boxes_filt[i][2:] += boxes_filt[i][:2]
+    transformed_boxes = predictor.transform.apply_boxes_torch(
+        boxes_filt, frame_image.size
+    ).to(predictor.device)
+    masks, scores, _ = predictor.predict_torch(
+        None, None, boxes=transformed_boxes, multimask_output=False
+    )
+    for i, score in enumerate(scores):
+        if score < 0.8:
+            masks[i] = False
+    return (masks.cpu().numpy(), transformed_boxes)
