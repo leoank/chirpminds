@@ -37,5 +37,5 @@ dependencies:
     - playwright
     - weave
     - rerun-sdk
-    - -e .
-    - -e ./lite
+    - -e ./chirpminds
+    - -e ./chirpminds/lite

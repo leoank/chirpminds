@@ -1,6 +1,5 @@
 [workspace]
-resolver = "2"
-members = ["chirpminds", "gui/src-tauri", "gui/src-wasm"]
+members = ["chirpminds_core", "gui/src-tauri", "gui/src-wasm"]
 
 [profile.release]
 lto = true
