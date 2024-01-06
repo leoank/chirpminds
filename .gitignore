@@ -299,3 +299,5 @@ dist
 data/raw/*/*
 data/processed/*/*
 scratch
+.devenv
+.direnv
