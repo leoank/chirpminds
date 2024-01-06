@@ -1,0 +1,6 @@
+[workspace]
+resolver = "2"
+members = ["chirpminds", "gui/src-tauri", "gui/src-wasm"]
+
+[profile.release]
+lto = true
