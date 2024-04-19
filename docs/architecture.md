@@ -36,3 +36,9 @@
 
 - 2D Flight path of each detected bird
 - Time spent by each detected bird at the feeder and antenna
+
+## Tech-stack
+- ultralytics - object tracking
+- mmdetection - RTMDet for instance segmentation
+- finetune mmdetection RTMDet model with interactive SAM generated dataset
+- use Kalman filters approach for object tracking
