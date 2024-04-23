@@ -33,6 +33,20 @@
               system = system;
               config.allowUnfree = true;
             };
+
+            libList = [
+                # Add needed packages here
+                pkgs.stdenv.cc.cc
+                pkgs.libGL
+                pkgs.glib
+              ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+                pkgs.cudaPackages.cudatoolkit
+                pkgs.cudaPackages.libcublas
+                pkgs.cudaPackages.libcurand
+                pkgs.cudaPackages.cudnn
+                pkgs.cudaPackages.libcufft
+                pkgs.linuxPackages.nvidia_x11
+              ];
           in
           {
             default = devenv.lib.mkShell {
@@ -40,12 +54,7 @@
               modules = [
                 {
                   env.NIX_LD = nixpkgs.lib.fileContents "${pkgs.stdenv.cc}/nix-support/dynamic-linker";
-                  env.NIX_LD_LIBRARY_PATH = nixpkgs.lib.makeLibraryPath [
-                    # Add needed packages here
-                    pkgs.stdenv.cc.cc
-                    pkgs.libGL
-                  ];
-                  # https://devenv.sh/reference/options/
+                  env.NIX_LD_LIBRARY_PATH = nixpkgs.lib.makeLibraryPath libList;
                   packages = with pkgs; [
                     micromamba
                     poetry
@@ -69,7 +78,7 @@
                   enterShell = ''
                     export LD_LIBRARY_PATH=$NIX_LD_LIBRARY_PATH
                     eval "$(micromamba shell hook -s bash)"
-                    micromamba create -r .venv -n chirp -c conda-forge python=3.10 ipykernel
+                    micromamba create -r .venv -n chirp python=3.10 ipykernel pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia -c conda-forge
                     micromamba activate .venv/envs/chirp
                     python -m ipykernel install --user --name chirp
                   '';
