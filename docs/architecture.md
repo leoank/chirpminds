@@ -2,10 +2,12 @@
 
 ## Pipeline
 
-- (optimization) Split source file into multiple chunks for parallel presence detection?
+- (optimization) Split source file into multiple chunks for parallel presence
+  detection?
 
 - (enhancement) Generate dataset for fast presence detector
-  - Use groudingdino with sam to generate source "bird" dataset for the specific field environment
+  - Use groudingdino with sam to generate source "bird" dataset for the specific
+    field environment
 
 - (enhancement) Train `fast` presence detector - maybe YOLOv8
 
@@ -14,12 +16,14 @@
   - create timestamps for presence of birds
 
 - (core) Create clips
-  - use the timestamps to create clips from source video where birds were detected
+  - use the timestamps to create clips from source video where birds were
+    detected
     - Make sure clips do not exceed a threshold.
     - split clip into multiple clips when threshold is breached
 
 - (core) Create segmentation masks
-  - run groundeddino + sam to segment birds in clips (parallel workers on clips iterable)
+  - run groundeddino + sam to segment birds in clips (parallel workers on clips
+    iterable)
   - save masks as videos? (compression for free)
 
 - (maybe core) Covert masks to polygons
@@ -27,7 +31,8 @@
 
 - (core) Motion tracking
   - we might not have to run segmentation on the entire clip
-  - we can use traditional motion tracking to track motion after initial segmentation
+  - we can use traditional motion tracking to track motion after initial
+    segmentation
     - Create patches from mask for each instance and then track patches
     - patches will to help very accuracy of tracking automatically
     - if patches are too far apart then tracking failed
@@ -38,7 +43,16 @@
 - Time spent by each detected bird at the feeder and antenna
 
 ## Tech-stack
+
 - ultralytics - object tracking
 - mmdetection - RTMDet for instance segmentation
 - finetune mmdetection RTMDet model with interactive SAM generated dataset
 - use Kalman filters approach for object tracking
+
+---
+
+Meeting 19th April
+
+- Classifier for bird inside and outside mesh
+- Check performance of kalman filters on the difficult to separate flight paths
+- Finetune models more to remove artificats and flickering

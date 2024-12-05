@@ -1,11 +1,11 @@
-#%%
+# %%
 import cv2
 from random import randint
 
 import numpy as np
 from chirpminds.utils import get_default_data_folder
 
-#%%
+# %%
 video_file = get_default_data_folder().joinpath(
     "raw/pilot/feeder_videos/20230114_Feeder02A/MVI_0013_mask.MP4"
 )
@@ -35,7 +35,7 @@ while True:
         break
 print("Selected bounding boxes {}".format(bboxes))
 
-#%%
+# %%
 # Create MultiTracker object
 multiTracker = cv2.MultiTracker_create()
 
@@ -44,4 +44,4 @@ for bbox in bboxes:
     multiTracker.add(cv2.TrackerMIL_create(), frame, bbox)
 
 # %%
-c
+

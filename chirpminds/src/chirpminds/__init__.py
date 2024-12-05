@@ -1,1 +1,1 @@
-"""Neocode."""
+"""Chirpmids."""

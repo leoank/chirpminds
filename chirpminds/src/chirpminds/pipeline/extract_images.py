@@ -1,27 +1,46 @@
 """Pipeline to extract images from video."""
 
 from pathlib import Path
+from subprocess import run as srun
+from shlex import split
 
 
-def extract_images(
-    input_path: Path, output_path: Path, force: bool, debug: bool
-) -> Path:
-    """Extract images from video files.
+def extract_frames(in_video: Path, out_dir: Path) -> Path:
+    """Extract frames from video file.
 
     Parameters
     ----------
-    input_path : Path
-        Path to read raw data files.
+    in_video : Path
+        Path to read video file.
     output_path : Path
         Path to save output files.
-    force : bool
-        Force re run the pipeline and overwrite existing data.
-    debug : bool
-        Run in debug mode.
-
     Returns
     -------
     Path
         Path to output file dir.
+
     """
-    pass
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cmd = f"ffmpeg -i {in_video.resolve()} -r 2 -s 640x360 -q:v 2 {out_dir.resolve()}/frame%d.jpeg"
+    cmd = split(cmd)
+    res = srun(cmd)
+    if res.returncode == 0:
+        return out_dir
+    else:
+        raise Exception(res.stdout)
+
+
+def process_video_files(vid_list: list[Path], out_dir: Path) -> None:
+    """Process video files to extract frames.
+
+    Parameters
+    ----------
+    vid_list : list[Path]
+        List of video files to process.
+    out_dir : Path
+        Path to save output files.
+
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for vid in vid_list:
+        _ = extract_frames(vid, out_dir.joinpath(vid.stem))

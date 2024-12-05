@@ -1,6 +1,0 @@
-outs:
-- md5: 9d9cf2a99d10112b461f3fb5c5eaa3ca.dir
-  size: 693997677
-  nfiles: 1
-  hash: md5
-  path: groundingdino

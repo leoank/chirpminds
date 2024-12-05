@@ -1,1 +1,0 @@
-"""Chirpminds lite."""

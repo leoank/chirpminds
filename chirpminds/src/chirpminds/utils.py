@@ -1,7 +1,7 @@
 """Utils."""
+# pyright: basic
 
-from collections.abc import Callable, Iterable
-from pathlib import Path
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from joblib import Parallel, cpu_count, delayed
@@ -13,12 +13,12 @@ class ChirpmindsError(Exception):
     pass
 
 
-def slice_iterable(iterable: Iterable[Any], count: int) -> list[slice]:
+def slice_iterable(iterable: Sequence, count: int) -> list[slice]:
     """Create slices of the given iterable.
 
     Parameters
     ----------
-    iterable : Iterable[Any]
+    iterable : Sequence
         A iterable to create slices.
     count : int
         Number of slices to create.
@@ -27,6 +27,7 @@ def slice_iterable(iterable: Iterable[Any], count: int) -> list[slice]:
     -------
     list[slice]
         A list of slice.
+
     """
     slices = []
     if count == 0:
@@ -42,21 +43,21 @@ def slice_iterable(iterable: Iterable[Any], count: int) -> list[slice]:
 
 
 def parallel(
-    iterable: Iterable[Any],
-    func: Callable[[list[Any], Any], Any],
+    iterable: Sequence,
+    func: Callable[..., Any],
     args: list[Any] = [],
-    jobs: int = None,
-    timeout: float = None,
-) -> list[Any]:
+    jobs: int | None = None,
+    timeout: float | None = None,
+) -> Any:  # noqa: ANN401
     """Distribute process on iterable.
 
     Parameters
     ----------
-    iterable : Iterable[Any]
+    iterable : Sequence
         Iterable to chunk and distribute.
-    func : Callable[[list[Any], Any], Any]
+    func : Callable[[List[Any], Any], Any]
         Function to distribute.
-    args : list[Any], optional
+    args : List[Any], optional
         Optional addtional args for the function, by default []
     jobs : int, optional
         Number of jobs to launch, by default None
@@ -65,20 +66,15 @@ def parallel(
 
     Returns
     -------
-    list[Any]
+    Any
         A list of outputs genetated by function.
+
     """
     jobs = jobs or cpu_count()
-    if len(iterable) < jobs:
+    if len(iterable) <= jobs:
         jobs = len(iterable)
     slices = slice_iterable(iterable, jobs)
-    print(f"Launching {jobs} parallel workers...")
     return Parallel(n_jobs=jobs, timeout=timeout)(
-        delayed(func)(chunk, idx, *args)
+        delayed(func)(chunk, *args, idx % jobs)
         for idx, chunk in enumerate([iterable[s] for s in slices])
     )
-
-
-def get_default_data_folder() -> Path:
-    """Get path to default data dir."""
-    return Path(__file__).parents[2].joinpath("data")
