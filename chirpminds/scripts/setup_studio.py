@@ -4,49 +4,39 @@ import argparse
 from pathlib import Path
 import os
 
+import numpy as np
 from label_studio_sdk.client import LabelStudio
 import supervision as sv
 
 
 def get_task_prediction(task, input_data_path: Path):
-    detection = sv.DetectionDataset.from_yolo(
+    dataset = sv.DetectionDataset.from_yolo(
         images_directory_path=str(input_data_path.joinpath("train/images")),
         annotations_directory_path=str(input_data_path.joinpath("train/labels")),
         data_yaml_path=str(input_data_path.joinpath("data.yaml"))
     )
 
-    dectections = [v for _,v in detection.annotations.items()]
-    breakpoint()
-
-    results = [detection.annotations[task.storage_filename]]
+    detections = dataset.annotations[task.storage_filename]
     predictions = []
-    for result in results:
-        img_width, img_height = result.orig_shape
-        boxes = result.boxes.cpu().numpy()
-        prediction = {'result': [], 'score': 0.0, 'model_version': "SAM 1"}
-        scores = []
-        for box, class_id, score in zip(boxes.xywh, boxes.cls, boxes.conf):
-            x, y, w, h = box
-            prediction['result'].append({
-                'from_name': 'label',
-                'to_name': 'img',
-                'original_width': int(img_width),
-                'original_height': int(img_height),
-                'image_rotation': 0,
-                'value': {
-                    'rotation': 0,
-                    'rectanglelabels': [result.names[class_id]],
-                    'width': w / img_width * 100,
-                    'height': h / img_height * 100,
-                    'x': (x - 0.5 * w) / img_width * 100,
-                    'y': (y - 0.5 * h) / img_height * 100
-                },
-                'score': float(score),
-                'type': 'rectanglelabels',
-            })
-            scores.append(float(score))
-            prediction['score'] = min(scores) if scores else 0.0
-            predictions.append(prediction)
+    polygons = [ sv.mask_to_polygons(m) for m in detections.mask ]
+    prediction = {'result': [], 'score': 1.0, 'model_version': "SAM 1"}
+    scores = []
+    for polygon in polygons:
+        polygon = polygon[0].tolist()
+        prediction['result'].append({
+            'from_name': 'label',
+            'to_name': 'img',
+            'image_rotation': 0,
+            "original_width": 1920,
+            "original_height": 1080,
+            'value': {
+                "points": [[(p[0]/1920)*100, (p[1]/1080)*100] for p in polygon],
+                "polygonlabels": ["chickadee"]
+            },
+            'score': 1.0,
+            'type': 'polygonlabels',
+        })
+    predictions.append(prediction)
     return predictions
 
 
@@ -62,13 +52,13 @@ def setup_label_studio(input_data_path: Path, api_key: str | None = None):
 
     client = LabelStudio(api_key=API_KEY)
 
-    yolo_labels = '\n'.join([f'<Label value="{label}"/>' for label in ["chickadee"]])
+    yolo_labels = '\n'.join([f'<Label value="{label}" background="red"/>' for label in ["chickadee"]])
     label_config = f'''
     <View>
         <Image name="img" value="$image" zoom="true" width="100%" maxWidth="800" brightnessControl="true" contrastControl="true" gammaControl="true" />
-        <RectangleLabels name="label" toName="img">
-        {yolo_labels}
-        </RectangleLabels>
+        <PolygonLabels name="label" toName="img" strokeWidth="1" pointSize="small" opacity="0.6">
+            {yolo_labels}
+        </PolygonLabels>
     </View>'''
 
     # Create project
@@ -95,7 +85,7 @@ def setup_label_studio(input_data_path: Path, api_key: str | None = None):
     tasks = client.tasks.list(project=project.id)
     for i, task in enumerate(tasks):
         predictions = get_task_prediction(task, input_data_path)[0]
-        client.predictions.create(task=task["id"], result=predictions['result'], score=predictions['score'], model_version=predictions['model_version'])
+        client.predictions.create(task=task.id, result=predictions['result'], score=predictions['score'], model_version=predictions['model_version'])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Setup studio CLI.")
