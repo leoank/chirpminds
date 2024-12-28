@@ -10,7 +10,8 @@ base_model = GroundedSAM(
         {
             "chickadee": "chickadee"
         }
-    )
+    ),
+    device="cuda"
 )
 
 def create_dataset(input_path: Path, output_path: Path):
