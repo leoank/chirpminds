@@ -2,18 +2,21 @@
 
 import argparse
 from pathlib import Path
-import os
 
-import torch as t
 import numpy as np
+import supervision as sv
+import torch as t
 from label_studio_sdk.client import LabelStudio
 from label_studio_sdk.converter.brush import (
-    mask2rle,
-    decode_from_annotation,
     decode_rle,
 )
-import supervision as sv
 from tqdm import tqdm
+
+labels_dict = {
+    "chickadee": 0,
+    "chickadee_in": 1,
+    "chickadee_out": 2,
+}
 
 
 def extract_annotations(
@@ -34,7 +37,7 @@ def extract_annotations(
     # Get task
     tasks = client.tasks.list(project=project.id)
     for i, task in enumerate(tqdm(tasks)):
-        if i == 104:
+        if i == 201:
             break
         detections = dataset.annotations[task.storage_filename]
         # breakpoint()
@@ -53,7 +56,11 @@ def extract_annotations(
                 scores = t.tensor(np.array([0.99987]))
                 det = sv.Detections.from_transformers(
                     {"scores": scores, "labels": labels, "masks": mask},
-                    {0: "chickadee"},
+                    {
+                        labels_dict[res["value"]["brushlabels"]]: res["value"][
+                            "brushlabels"
+                        ]
+                    },
                 )
                 dets.append(det)
             detections = sv.Detections.merge(dets)
@@ -73,7 +80,7 @@ if __name__ == "__main__":
     )
     dataset = extract_annotations(dataset)
 
-    out_path = input_data_path.parent.joinpath("ref001")
+    out_path = input_data_path.parent.joinpath("inoutdataref")
     dataset.as_yolo(
         images_directory_path=str(out_path.joinpath("train/images")),
         annotations_directory_path=str(out_path.joinpath("train/labels")),
