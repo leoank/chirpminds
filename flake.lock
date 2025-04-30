@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1710146030,
-        "narHash": "sha256-SZ5L6eA7HJ/nmkzGG7/ISclqe6oZdOZTNoesiInkXPQ=",
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
         "owner": "numtide",
         "repo": "flake-utils",
-        "rev": "b1d9ab70662946ef0850d488da1c9019f3a9752a",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
         "type": "github"
       },
       "original": {
@@ -22,43 +22,27 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1722372011,
-        "narHash": "sha256-B2xRiC3NEJy/82ugtareBkRqEkPGpMyjaLxaR8LBxNs=",
+        "lastModified": 1736200483,
+        "narHash": "sha256-JO+lFN2HsCwSLMUWXHeOad6QUxOuwe9UOAF/iSl1J4I=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "cf05eeada35e122770c5c14add958790fcfcbef5",
+        "rev": "3f0a8ac25fb674611b98089ca3a5dd6480175751",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "nixos-24.05",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs_ank": {
-      "locked": {
-        "lastModified": 1722739108,
-        "narHash": "sha256-mAninU7FWDCNAHexzJyhQCNzzTizhquaak8sut8HzDs=",
-        "owner": "leoank",
-        "repo": "nixpkgs",
-        "rev": "14021cdb4737498488987affe068bfb39a5e8715",
-        "type": "github"
-      },
-      "original": {
-        "owner": "leoank",
-        "ref": "cuda",
+        "ref": "nixos-24.11",
         "repo": "nixpkgs",
         "type": "github"
       }
     },
     "nixpkgs_master": {
       "locked": {
-        "lastModified": 1722626509,
-        "narHash": "sha256-WlODhdS5aKq3fq7iosacRijBqIJJeVhS89jNSQ9xSHI=",
+        "lastModified": 1736422221,
+        "narHash": "sha256-KNU17pKbPP6aclxa4zoZDUFJdwfxFpJl5PMvLr+7PxU=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "f1802523b8a6cb333927b4cccc44f1272c33e38b",
+        "rev": "67d39b38ad43310b5f87b17cd8c1dde60b845fa5",
         "type": "github"
       },
       "original": {
@@ -72,7 +56,6 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
-        "nixpkgs_ank": "nixpkgs_ank",
         "nixpkgs_master": "nixpkgs_master",
         "systems": "systems"
       }

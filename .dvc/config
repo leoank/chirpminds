@@ -1,5 +1,0 @@
-[core]
-    remote = ualberta
-['remote "ualberta"']
-    url = gdrive://1b_WhFWItpsR12Fa90ber2cgSM1mKoTUi
-    gdrive_acknowledge_abuse = true

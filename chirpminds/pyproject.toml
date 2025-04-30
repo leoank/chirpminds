@@ -2,49 +2,69 @@
 name = "chirpminds"
 version = "0.2.0"
 description = "AI toolkit for studying creatures who chirp."
-authors = [{ name = "Ankur Kumar", email = "ank@leoank.me" }]
 readme = "README.md"
+authors = [
+    { name = "Ankur Kumar", email = "ank@leoank.me" }
+]
+requires-python = ">=3.10"
 dependencies = [
-  "torch==2.3",
-  "torchvision==0.18",
-  "onnx==1.15",
-  "tensorflow==2.16.1",
-  "ultralytics~=8.0",
-  "supervision~=0.22",
-  "autodistill~=0.1",
-  # "autodistill-grounded-sam-2~=0.1",
-  "autodistill-grounded-sam~=0.1",
-  "autodistill-yolov8~=0.1",
-  "autodistill-yolonas~=0.1",
-  "roboflow~=1.1",
-  "scikit-learn~=1.5",
-  "packaging~=24.1",               # to build flash attention 2.6
-  "joblib~=1.4",
-  "imjoy-rpc~=0.5",
-  "hypha~=0.15",
-  "scikit-image==0.22",
+  "ultralytics",
+  "supervision",
+  "fiftyone",
+  "label-studio",
+  "label-studio-sdk",
+  "joblib",
+  "polars"
 ]
 
-
 [project.optional-dependencies]
-dev = ["pytest~=8.2", "ruff~=0.5", "build~=1.2", "twine~=5.1"]
-notes = ["jupyterlab~=4.2"]
+cpu = [
+  "torch",
+  "torchvision",
+]
+cu124 = [
+  "torch",
+  "torchvision",
+]
+dev = [
+  "ipython",
+  "marimo",
+  "pytest",
+  "ruff",
+  "marimo"
+]
+
+[tool.uv]
+conflicts = [
+  [
+    { extra = "cpu" },
+    { extra = "cu124" },
+  ],
+]
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu124", extra = "cu124" },
+]
+torchvision = [
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu124", extra = "cu124" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
 
 [project.scripts]
-chirpminds = "chirpminds.cli:main"
+chirp = "chirpminds.cli:main"
 
 [build-system]
-# setuptools>=61 supports PEPs 517, 518, 621, 660
-# https://setuptools.pypa.io/en/latest/history.html#v61-0-0
-# setuptools-scm asks for setuptools>=64
-# https://setuptools-scm.readthedocs.io/en/latest/
-requires = ["setuptools>=64.0.0", "setuptools-scm>=8.0"]
-build-backend = "setuptools.build_meta"
-
-[tool.ruff]
-select = ["ANN", "C90", "D", "E", "F", "I", "N", "NPY", "PTH", "TID", "UP", "W"]
-exclude = ["vendor"]
-
-[tool.basedpyright]
-typeCheckingMode = "basic"
-reportMissingTypeStubs = false
+requires = ["hatchling"]
+build-backend = "hatchling.build"

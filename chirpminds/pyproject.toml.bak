@@ -1,0 +1,50 @@
+[project]
+name = "chirpminds"
+version = "0.2.0"
+description = "AI toolkit for studying creatures who chirp."
+authors = [{ name = "Ankur Kumar", email = "ank@leoank.me" }]
+readme = "README.md"
+dependencies = [
+  "torch==2.3",
+  "torchvision==0.18",
+  "onnx==1.15",
+  "tensorflow==2.16.1",
+  "ultralytics~=8.0",
+  "supervision~=0.22",
+  "autodistill~=0.1",
+  # "autodistill-grounded-sam-2~=0.1",
+  "autodistill-grounded-sam~=0.1",
+  "autodistill-yolov8~=0.1",
+  "autodistill-yolonas~=0.1",
+  "roboflow~=1.1",
+  "scikit-learn~=1.5",
+  "packaging~=24.1",               # to build flash attention 2.6
+  "joblib~=1.4",
+  "imjoy-rpc~=0.5",
+  "hypha~=0.15",
+  "scikit-image==0.22",
+]
+
+
+[project.optional-dependencies]
+dev = ["pytest~=8.2", "ruff~=0.5", "build~=1.2", "twine~=5.1"]
+notes = ["jupyterlab~=4.2"]
+
+[project.scripts]
+chirpminds = "chirpminds.cli:main"
+
+[build-system]
+# setuptools>=61 supports PEPs 517, 518, 621, 660
+# https://setuptools.pypa.io/en/latest/history.html#v61-0-0
+# setuptools-scm asks for setuptools>=64
+# https://setuptools-scm.readthedocs.io/en/latest/
+requires = ["setuptools>=64.0.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+select = ["ANN", "C90", "D", "E", "F", "I", "N", "NPY", "PTH", "TID", "UP", "W"]
+exclude = ["vendor"]
+
+[tool.basedpyright]
+typeCheckingMode = "basic"
+reportMissingTypeStubs = false
