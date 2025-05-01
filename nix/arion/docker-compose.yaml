@@ -1,0 +1,23 @@
+services:
+  test:
+    image: ubuntu
+    command: nvidia-smi
+    #environment:
+      #- NVIDIA_VISIBLE_DEVICES=all
+      #- NVIDIA_DRIVER_CAPABILITIES=all
+      #- LD_LIBRARY_PATH=/usr/local/nvidia/lib64
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+              count: 1
+      # resources:
+      #   reservations:
+      #     devices:
+      #     - driver: cdi
+      #       device_ids:
+      #         - nvidia.com/gpu=all
+      #       capabilities:
+      #         - gpu

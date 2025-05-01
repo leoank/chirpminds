@@ -1,7 +1,7 @@
 [project]
-name = "your project"
+name = "chirpminds"
 version = "0.1.0"
-description = "build vision models fast"
+description = "AI toolkit for things that chirp"
 readme = "README.md"
 authors = [
     { name = "Ankur Kumar", email = "ank@leoank.me" }
@@ -11,7 +11,10 @@ dependencies = [
   "ultralytics",
   "fiftyone",
   "label-studio",
-  "label-studio-sdk"
+  "label-studio-sdk",
+  "ffmpeg-python",
+  "gdown",
+  "supervision"
 ]
 
 [project.optional-dependencies]
@@ -77,3 +80,6 @@ build-backend = "hatchling.build"
 [tool.jupytext.formats]
 "notebooks/ipynb" = "ipynb"
 "notebooks/pypct" = "py:percent"
+
+[tool.pyright]
+exclude = [ "src", "notebooks"]
