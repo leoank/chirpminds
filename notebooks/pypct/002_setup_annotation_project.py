@@ -123,18 +123,21 @@ labels = ["bcch", "antenna", "bcch_on_aantenna", "bcch_off_antenna"]
 # Path inside the container
 frames_path = Path("/datastore/frames")
 client = LabelStudio(api_key=api_key, base_url=base_url)
+
+
+# %%
 project = setup_project(
     client, "Annoate chickadee variety", labels, frames_path, model_url
 )
 
 # %%
-client.projects.delete(7)
+client.projects.list()
+
+# %%
+client.projects.delete(9)
 
 # %% [markdown]
 # ## Get annotations back from labelstudio
-
-# %%
-client.projects.list()
 
 # %%
 from IPython.display import IFrame

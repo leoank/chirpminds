@@ -8,32 +8,43 @@ from pathlib import Path
 
 import ffmpeg
 import numpy as np
+from moviepy import VideoFileClip, concatenate_videoclips
 from tqdm import tqdm
 
 from .utils import parallel
 
-# %% ../../notebooks/ipynb/001_process_video.ipynb 6
+# %% ../../notebooks/ipynb/001_process_video.ipynb 12
 def get_video_info(video_path: Path) -> dict:
     probe = ffmpeg.probe(video_path.resolve().__str__())
     return next(s for s in probe["streams"] if s["codec_type"] == "video")
 
-# %% ../../notebooks/ipynb/001_process_video.ipynb 9
+# %% ../../notebooks/ipynb/001_process_video.ipynb 14
 def extract_frame(
-    start_time_list: list[str], file_path: Path, out_dir: Path, job_idx: int = 0
+    start_time_list: list[str],
+    file_path: Path,
+    out_dir: Path,
+    quiet: bool = False,
+    job_idx: int = 0,
 ) -> None:
     for start_time in start_time_list:
         ffmpeg.input(str(file_path.resolve()), ss=start_time).output(
             str(out_dir.resolve() / f"{file_path.stem}_{start_time}.jpg"), vframes=1
-        ).run()
+        ).run(overwrite_output=True, quiet=quiet)
 
-# %% ../../notebooks/ipynb/001_process_video.ipynb 10
+# %% ../../notebooks/ipynb/001_process_video.ipynb 15
 def extract_frames(
-    video_path_list: list[Path], num_frames: int, out_dir: Path, job_idx: int = 0
+    video_path_list: list[Path],
+    num_frames: int,
+    out_dir: Path,
+    quiet: bool = False,
+    job_idx: int = 0,
 ) -> None:
     for video in tqdm(video_path_list, position=job_idx):
         print(f"Processing {video}")
         video_info = get_video_info(video)
         sampled_start_times = np.linspace(
-            0, round(float(video_info["duration"])), num_frames, dtype=np.int32
+            0, round(float(video_info["duration"])), num_frames + 1, dtype=np.int32
         )
-        parallel(sampled_start_times.tolist(), extract_frame, [video, out_dir])
+        parallel(
+            sampled_start_times[:-1].tolist(), extract_frame, [video, out_dir, quiet]
+        )

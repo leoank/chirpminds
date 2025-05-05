@@ -24,6 +24,7 @@ from pathlib import Path
 
 import ffmpeg
 import numpy as np
+from moviepy import VideoFileClip, concatenate_videoclips
 from tqdm import tqdm
 
 from chirpminds.utils import parallel
@@ -33,13 +34,55 @@ from chirpminds.utils import parallel
 
 # %%
 raw_data_dir = Path("../../scratch/raw_data")
+clips_dir = Path("../../scratch/clips")
+clips_dir.mkdir(exist_ok=True)
 frames_dir = Path("../../scratch/frames")
 frames_dir.mkdir(exist_ok=True)
 file_list_mts = [file for file in raw_data_dir.glob("*.MTS")]
 file_list_mp4 = [file for file in raw_data_dir.glob("*.MP4")]
 
+# %% [markdown]
+# ## View video
+
 # %%
-[file_list_mts[-1]] + file_list_mp4 
+video_clip_1 = VideoFileClip(file_list_mts[0])
+video_clip_2 = VideoFileClip(file_list_mts[1])
+video_clip_3 = VideoFileClip(file_list_mts[2])
+
+# %%
+video_clip_3.subclipped(600).display_in_notebook(
+    width=500, maxduration=300, fps=10, rd_kwargs=dict(bitrate="50k")
+)
+
+# %% [markdown]
+# ## Make video clips
+
+# %%
+video_clip_1_clipped = video_clip_1.subclipped(800, 960)
+video_clip_1_clipped.write_videofile(
+    str(clips_dir.joinpath(file_list_mts[0].resolve().with_suffix(".mp4").name)),
+    audio=False,
+    write_logfile=True,
+)
+video_clip_1_clipped.close()
+
+# %%
+video_clip_2_clipped = video_clip_2.subclipped(0, 200)
+video_clip_2_clipped.write_videofile(
+    str(clips_dir.joinpath(file_list_mts[1].resolve().with_suffix(".mp4").name)),
+    audio=False,
+    write_logfile=True,
+)
+video_clip_2_clipped.close()
+
+# %%
+video_clip_3_concat = video_clip_3.subclipped(120, 190)
+video_clip_3_concat.write_videofile(
+    str(clips_dir.joinpath(file_list_mts[2].resolve().with_suffix(".mp4").name)),
+    audio=False,
+    write_logfile=True,
+)
+video_clip_3_concat.close()
 
 
 # %%
@@ -49,9 +92,6 @@ def get_video_info(video_path: Path) -> dict:
     return next(s for s in probe["streams"] if s["codec_type"] == "video")
 
 
-# %%
-get_video_info(file_list[1])
-
 # %% [markdown]
 #  ## Process video files
 
@@ -59,12 +99,16 @@ get_video_info(file_list[1])
 # %%
 # | export
 def extract_frame(
-    start_time_list: list[str], file_path: Path, out_dir: Path, job_idx: int = 0
+    start_time_list: list[str],
+    file_path: Path,
+    out_dir: Path,
+    quiet: bool = False,
+    job_idx: int = 0,
 ) -> None:
     for start_time in start_time_list:
         ffmpeg.input(str(file_path.resolve()), ss=start_time).output(
             str(out_dir.resolve() / f"{file_path.stem}_{start_time}.jpg"), vframes=1
-        ).run()
+        ).run(overwrite_output=True, quiet=quiet)
 
 
 # %%
@@ -72,23 +116,44 @@ def extract_frame(
 
 
 def extract_frames(
-    video_path_list: list[Path], num_frames: int, out_dir: Path, job_idx: int = 0
+    video_path_list: list[Path],
+    num_frames: int,
+    out_dir: Path,
+    quiet: bool = False,
+    job_idx: int = 0,
 ) -> None:
     for video in tqdm(video_path_list, position=job_idx):
         print(f"Processing {video}")
         video_info = get_video_info(video)
         sampled_start_times = np.linspace(
-            0, round(float(video_info["duration"])), num_frames, dtype=np.int32
+            0, round(float(video_info["duration"])), num_frames + 1, dtype=np.int32
         )
-        parallel(sampled_start_times.tolist(), extract_frame, [video, out_dir])
+        parallel(
+            sampled_start_times[:-1].tolist(), extract_frame, [video, out_dir, quiet]
+        )
 
+
+# %% [markdown]
+# ## Process clips
 
 # %%
-extract_frames(file_list_mts[:-1], 160, frames_dir)
-
+clips = [file for file in clips_dir.glob("*.mp4")]
+clips
 
 # %%
-extract_frames([file_list_mts[-1]] + file_list_mp4 , 80, frames_dir)
+get_video_info(clips[2])
+
+# %%
+# Change the number of jobs to 2.
+# More number of threads tries to write to the same file and crash
+extract_frames(clips, 133, frames_dir, True)
+
+
+# %% [markdown]
+# ## Process full videos
+
+# %%
+extract_frames(file_list_mp4, 80, frames_dir, True)
 
 # %% [markdown]
 # ## View sampled frames
@@ -98,5 +163,3 @@ extract_frames([file_list_mts[-1]] + file_list_mp4 , 80, frames_dir)
 import nbdev  # noqa
 
 nbdev.nbdev_export()
-
-# %%

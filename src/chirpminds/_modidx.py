@@ -14,4 +14,4 @@ d = { 'settings': { 'branch': 'main',
                                                                                        'chirpminds/process_video.py'),
                                           'chirpminds.process_video.get_video_info': ( 'process_video.html#get_video_info',
                                                                                        'chirpminds/process_video.py')},
-            'chirpminds.utils': {'chirpminds.utils.download_file': ('download_gdrive.html#download_file', 'chirpminds/utils.py')}}}
+            'chirpminds.utils': {}}}
