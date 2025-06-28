@@ -110,6 +110,30 @@ def split_array(
 
 # %%
 # | export
+def remove_frames_with_no_anno(dataset_path: Path) -> None:
+    frames = {}
+    labels = {}
+    for frame_type in ["train", "val", "test"]:
+        frames[frame_type] = [
+            file.name.split(".")[0]
+            for file in dataset_path.joinpath(f"{frame_type}/images").rglob("*.jpg")
+        ]
+    for label_type in ["train", "val", "test"]:
+        labels[label_type] = [
+            file.name.split(".")[0]
+            for file in dataset_path.joinpath(f"{label_type}/labels").rglob("*.txt")
+        ]
+
+    for local_frame_type, local_frames in frames.items():
+        local_labels = labels[local_frame_type]
+        for frame in local_frames:
+            if frame not in local_labels:
+                print(f"Removing frame: {frame}.jpg")
+                dataset_path.joinpath(f"{local_frame_type}/images/{frame}.jpg").unlink()
+
+
+# %%
+# | export
 def create_detection_yolo(labels: list[str], frames_path: Path, out_path: Path) -> None:
     # Create directories
     out_path.joinpath("annotated").mkdir(parents=True, exist_ok=True)
@@ -147,18 +171,19 @@ def create_detection_yolo(labels: list[str], frames_path: Path, out_path: Path) 
 def write_annotated_image(
     detections: sv.Detections, image_path: Path, out_path: Path
 ) -> None:
-    image = cv2.imread(image_path.absolute().__str__())
-    box_annotator = sv.BoxAnnotator()
-    mask_annotator = sv.MaskAnnotator()
-    label_annotator = sv.LabelAnnotator()
-    annotated_frame = box_annotator.annotate(scene=image, detections=detections)
-    annotated_frame = mask_annotator.annotate(
-        scene=annotated_frame, detections=detections
-    )
-    annotated_frame = label_annotator.annotate(
-        scene=annotated_frame, detections=detections
-    )
-    cv2.imwrite(out_path.absolute().__str__(), annotated_frame)
+    if len(detections) != 0:
+        image = cv2.imread(image_path.absolute().__str__())
+        box_annotator = sv.BoxAnnotator()
+        mask_annotator = sv.MaskAnnotator()
+        label_annotator = sv.LabelAnnotator()
+        annotated_frame = box_annotator.annotate(scene=image, detections=detections)
+        annotated_frame = mask_annotator.annotate(
+            scene=annotated_frame, detections=detections
+        )
+        annotated_frame = label_annotator.annotate(
+            scene=annotated_frame, detections=detections
+        )
+        cv2.imwrite(out_path.absolute().__str__(), annotated_frame)
 
 
 # %%
@@ -168,7 +193,8 @@ def write_label(detections: sv.Detections, out_path: Path, img_shape: tuple) -> 
         detections=detections,
         image_shape=img_shape,
     )
-    out_path.write_text("\n".join(lines))
+    if len(lines) != 0:
+        out_path.write_text("\n".join(lines))
 
 
 # %%
@@ -238,6 +264,8 @@ def extract_task_annotation(
                         curr_label = res["value"]["keypointlabels"][0]
                     else:
                         raise Exception("Unknow label found!")
+                    if curr_label not in labels:
+                        continue
                     img_width = res["original_width"]
                     img_height = res["original_height"]
                     mask = decode_rle(res["value"]["rle"])
@@ -269,7 +297,11 @@ def extract_task_annotation(
 # %%
 # | export
 def extract_annotations(
-    client: LabelStudio, project_id: int, out_path: Path, jobs: int = 2
+    client: LabelStudio,
+    project_id: int,
+    out_path: Path,
+    labels: list[str],
+    jobs: int = 2,
 ) -> None:
     # Get project
     project = client.projects.get(id=project_id)
@@ -283,10 +315,44 @@ def extract_annotations(
 
 
 # %%
+# only bcch
+labels = ["bcch"]
+detection_dataset_path = Path(
+    "/home/ank/workspace/hub/leoank/chirpminds/main/scratch/cbird_anno_bcch_001"
+)
 create_detection_yolo(labels, local_frames_path, detection_dataset_path)
+extract_annotations(client, project_id, detection_dataset_path, labels, 20)
+remove_frames_with_no_anno(detection_dataset_path)
 
 # %%
-extract_annotations(client, project_id, detection_dataset_path, 20)
+# bcch + antenna
+labels = ["bcch", "antenna"]
+detection_dataset_path = Path(
+    "/home/ank/workspace/hub/leoank/chirpminds/main/scratch/cbird_anno_bcch_antenna_001"
+)
+create_detection_yolo(labels, local_frames_path, detection_dataset_path)
+extract_annotations(client, project_id, detection_dataset_path, labels, 20)
+remove_frames_with_no_anno(detection_dataset_path)
+
+# %%
+# bcch_on_aantenna + bcch_on_aantenna
+labels = ["bcch_on_aantenna", "bcch_off_antenna"]
+detection_dataset_path = Path(
+    "/home/ank/workspace/hub/leoank/chirpminds/main/scratch/cbird_anno_bcchonoff_001"
+)
+create_detection_yolo(labels, local_frames_path, detection_dataset_path)
+extract_annotations(client, project_id, detection_dataset_path, labels, 20)
+remove_frames_with_no_anno(detection_dataset_path)
+
+# %%
+# bcch_on_aantenna + bcch_on_aantenna + antenna
+labels = ["bcch_on_aantenna", "bcch_off_antenna", "antenna"]
+detection_dataset_path = Path(
+    "/home/ank/workspace/hub/leoank/chirpminds/main/scratch/cbird_anno_bcchonoff_antenna_001"
+)
+create_detection_yolo(labels, local_frames_path, detection_dataset_path)
+extract_annotations(client, project_id, detection_dataset_path, labels, 20)
+remove_frames_with_no_anno(detection_dataset_path)
 
 # %%
 # | hide
