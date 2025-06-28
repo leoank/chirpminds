@@ -1,4 +1,5 @@
 podman run --device nvidia.com/gpu=all \
+  --detach \
   -p 9090:9090 \
   --env SAM_CHOICE=SAM \
   --env LOG_LEVEL=DEBUG \

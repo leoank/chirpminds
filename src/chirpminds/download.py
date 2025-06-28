@@ -12,6 +12,8 @@ from tqdm import tqdm
 from .utils import parallel
 
 # %% ../../notebooks/ipynb/000_download_gdrive.ipynb 6
-def download_file(file_name_list: list[str], file_map: dict[str, str], job_id: int) -> None:
+def download_file(
+    file_name_list: list[str], file_map: dict[str, str], job_id: int
+) -> None:
     for file_name in tqdm(file_name_list, position=job_id):
         gdown.download(id=file_name, output=file_map[file_name])

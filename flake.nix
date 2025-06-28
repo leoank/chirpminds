@@ -82,6 +82,8 @@
                 # duckdb
                 # mongodb
                 arion
+                mpkgs.just
+                mpkgs.pueue
 
                 # video tools
                 ffmpeg

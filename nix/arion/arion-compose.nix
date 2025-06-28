@@ -22,7 +22,7 @@
         };
         volumes = [
           "${toString ../../scratch/container_data/labelstudio}:/label-studio/data"
-          "${toString ../../scratch/frames}:/datastore/frames"
+          "${toString ../../scratch/new_frames}:/datastore/frames"
         ];
         ports = [ "8080:8080" ];
         command = [
@@ -36,26 +36,26 @@
       };
     };
 
-    testml = {
-      out.service = {
-        deploy.resources.reservations.devices = [
-          {
-            driver = "nvidia";
-            capabilities = [ "gpu" ];
-            count = 1;
-          }
-        ];
-
-      };
-      service = {
-        image = "ubuntu";
-        # environment = {
-        #   NVIDIA_VISIBLE_DEVICES = "all";
-        #   NVIDIA_DRIVER_CAPABILITIES = "all";
-        # };
-        command = [ "nvidia-smi" ];
-      };
-    };
+    # testml = {
+    #   out.service = {
+    #     deploy.resources.reservations.devices = [
+    #       {
+    #         driver = "nvidia";
+    #         capabilities = [ "gpu" ];
+    #         count = 1;
+    #       }
+    #     ];
+    #
+    #   };
+    #   service = {
+    #     image = "ubuntu";
+    #     # environment = {
+    #     #   NVIDIA_VISIBLE_DEVICES = "all";
+    #     #   NVIDIA_DRIVER_CAPABILITIES = "all";
+    #     # };
+    #     command = [ "nvidia-smi" ];
+    #   };
+    # };
     #
     # labelstudioml = {
     #   image.rawConfig = {

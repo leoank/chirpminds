@@ -15,7 +15,8 @@ dependencies = [
   "ffmpeg-python",
   "gdown",
   "supervision",
-  "moviepy"
+  "moviepy",
+  "pyyaml>=6.0.2",
 ]
 
 [project.optional-dependencies]

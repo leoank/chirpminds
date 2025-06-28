@@ -54,7 +54,7 @@ def parallel(
     func : Callable[[List[Any], Any], Any]
         Function to distribute.
     args : List[Any], optional
-        Optional addtional args for the function, by default []
+        Optional additional args for the function, by default []
     jobs : int, optional
         Number of jobs to launch, by default None
     timeout: float, optional

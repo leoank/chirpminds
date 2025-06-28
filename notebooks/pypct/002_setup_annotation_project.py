@@ -16,7 +16,7 @@
 # # Setup labelstudio project for annotation
 
 # %%
-# | default_exp labelstudio
+# | default_exp labelstudio/project
 
 # %%
 # | export
@@ -199,3 +199,5 @@ def extract_annotations(client: LabelStudio, project_id: int, out_path: Path) ->
 import nbdev  # noqa
 
 nbdev.nbdev_export()
+
+# %%

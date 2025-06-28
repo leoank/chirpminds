@@ -28,10 +28,10 @@ def extract_frame(
 ) -> None:
     for start_time in start_time_list:
         ffmpeg.input(str(file_path.resolve()), ss=start_time).output(
-            str(out_dir.resolve() / f"{file_path.stem}_{start_time}.jpg"), vframes=1
+            str(out_dir.resolve() / f"{file_path.stem}_{start_time}.jpg"), vframes=1,  vf="bwdif",
         ).run(overwrite_output=True, quiet=quiet)
 
-# %% ../../notebooks/ipynb/001_process_video.ipynb 15
+# %% ../../notebooks/ipynb/001_process_video.ipynb 16
 def extract_frames(
     video_path_list: list[Path],
     num_frames: int,
