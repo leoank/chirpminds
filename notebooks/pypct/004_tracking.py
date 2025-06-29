@@ -50,8 +50,47 @@ from chirpminds.utils import parallel
 
 # %%
 # | export
-def process_events_csv(in_csv_path: Path, out_csv_path: Path):
+def process_events_csv(in_csv_path: Path):
     df = pl.read_csv(in_csv_path)
+    processed = {}
+    for frame_id, bird_id, on_antenna, off_antenna, _, _, _, _ in df.iter_rows():
+        if processed.get(bird_id, None) is None:
+            processed[bird_id] = {
+                "enter_frame": frame_id,
+                "start_antenna": None if on_antenna == 0 else frame_id,
+                "left_antenna": None,
+                "left_frame": frame_id,
+            }
+        else:
+            if on_antenna == 1:
+                if processed[bird_id]["start_antenna"] is None:
+                    processed[bird_id]["start_antenna"] = frame_id
+            if off_antenna == 1:
+                if processed[bird_id]["left_antenna"] is None:
+                    processed[bird_id]["left_antenna"] = (
+                        frame_id
+                        if processed[bird_id]["start_antenna"] is not None
+                        else None
+                    )
+            processed[bird_id]["left_frame"] = frame_id
+    csv_writer = csv.writer(
+        in_csv_path.with_suffix(".processed.csv").open("w"),
+        delimiter=",",
+        quoting=csv.QUOTE_MINIMAL,
+    )
+    csv_writer.writerow(
+        ["bird_id", "enter_frame", "start_antenna", "left_antenna", "left_frame"]
+    )
+    for k, v in processed.items():
+        csv_writer.writerow(
+            [
+                k,
+                v["enter_frame"],
+                v["start_antenna"],
+                v["left_antenna"],
+                v["left_frame"],
+            ]
+        )
 
 
 # %%
@@ -178,17 +217,12 @@ out_path = Path(
 track_video(video_clip_path, out_path, bcch_model_path, bcchonoff_model_path)
 
 # %%
-local_frames_path = Path(
-    "/home/ank/workspace/hub/leoank/chirpminds/main/scratch/new_frames"
-)
-local_frames = [file for file in local_frames_path.rglob("*.jpg")]
-
-# %%
-local_frames[0]
-
-# %%
 bcch_model = YOLO(bcch_model_path)
 bcch_model(local_frames[50])
+
+# %%
+csv_files = [file for file in out_path.rglob("*.csv")]
+process_events_csv(csv_files[0])
 
 # %%
 # | hide
