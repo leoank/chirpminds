@@ -34,6 +34,7 @@
             # Add needed packages here
             pkgs.stdenv.cc.cc
             pkgs.libGL
+            pkgs.libz
             pkgs.glib
           ]
           ++ pkgs.lib.optionals pkgs.stdenv.isLinux (
